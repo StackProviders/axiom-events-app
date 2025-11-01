@@ -7,7 +7,7 @@ chromium.use(StealthPlugin());
 
 const PROFILE_PATH = path.join(__dirname, 'chrome-profile');
 const SOCKET_SERVER = 'http://localhost:3000';
-const AXIOM_WS_URL = 'wss://cluster-global2.axiom.trade/';
+const AXIOM_WS_URL = 'wss://cluster-global2.axiom.trade';
 
 async function launchWithProfile() {
     const socket = io(SOCKET_SERVER);
@@ -27,7 +27,7 @@ async function launchWithProfile() {
     page.on('websocket', (ws) => {
         if (ws.url().startsWith(AXIOM_WS_URL)) {
             console.log(`Axiom WebSocket connected: ${ws.url()}`);
-            
+
             ws.on('framesent', (event) => {
                 const data = { type: 'sent', url: ws.url(), payload: event.payload };
                 socket.emit('axiom-event', data);
@@ -35,9 +35,14 @@ async function launchWithProfile() {
             });
 
             ws.on('framereceived', (event) => {
-                const data = { type: 'received', url: ws.url(), payload: event.payload };
-                socket.emit('axiom-event', data);
-                console.log('Axiom WS received:', data);
+                try {
+                    const parsed = JSON.parse(event.payload);
+                    if (parsed.room === 'new_pairs') {
+                        const data = { type: 'received', url: ws.url(), payload: event.payload };
+                        socket.emit('axiom-event', data);
+                        console.log('New pair detected:', data);
+                    }
+                } catch (e) {}
             });
 
             ws.on('close', () => {
