@@ -1,9 +1,13 @@
-const { chromium } = require('playwright');
+const { chromium } = require('playwright-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const io = require('socket.io-client');
 const path = require('path');
 
+chromium.use(StealthPlugin());
+
 const PROFILE_PATH = path.join(__dirname, 'chrome-profile');
-const SOCKET_SERVER = 'http://localhost:3000'; // Change to your Socket.IO server
+const SOCKET_SERVER = 'http://localhost:3000';
+const AXIOM_WS_URL = 'wss://cluster-global2.axiom.trade/';
 
 async function launchWithProfile() {
     const socket = io(SOCKET_SERVER);
@@ -14,16 +18,16 @@ async function launchWithProfile() {
 
     const browser = await chromium.launchPersistentContext(PROFILE_PATH, {
         headless: false,
-        args: ['--no-sandbox']
+        args: ['--no-sandbox', '--disable-blink-features=AutomationControlled']
     });
 
     const page = await browser.newPage();
 
     // Track WebSocket connections
     page.on('websocket', (ws) => {
-        console.log(`WebSocket opened: ${ws.url()}`);
-
-        if (ws.url().includes('axiom')) {
+        if (ws.url().startsWith(AXIOM_WS_URL)) {
+            console.log(`Axiom WebSocket connected: ${ws.url()}`);
+            
             ws.on('framesent', (event) => {
                 const data = { type: 'sent', url: ws.url(), payload: event.payload };
                 socket.emit('axiom-event', data);
