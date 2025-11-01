@@ -28,17 +28,18 @@ async function launchWithProfile() {
         if (ws.url().startsWith(AXIOM_WS_URL)) {
             console.log(`Axiom WebSocket connected: ${ws.url()}`);
 
-            ws.on('framesent', (event) => {
-                const data = { type: 'sent', url: ws.url(), payload: event.payload };
-                socket.emit('axiom-event', data);
-                console.log('Axiom WS sent:', data);
-            });
+            // ws.on('framesent', (event) => {
+            //     const data = { type: 'sent', url: ws.url(), payload: event.payload };
+            //     socket.emit('axiom-event', data);
+            //     console.log('Axiom WS sent:', data);
+            // });
 
             ws.on('framereceived', (event) => {
                 try {
                     const parsed = JSON.parse(event.payload);
+
                     if (parsed.room === 'new_pairs') {
-                        const data = { type: 'received', url: ws.url(), payload: event.payload };
+                        const data = { type: 'newPair', data: JSON.parse(event.payload) };
                         socket.emit('axiom-event', data);
                         console.log('New pair detected:', data);
                     }
