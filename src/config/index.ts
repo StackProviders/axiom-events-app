@@ -3,7 +3,7 @@ import os from 'os';
 
 export const config = {
     PORT: 5000,
-    VISIBLE_BROWSER: false,
+    VISIBLE_BROWSER: true,
     PROFILE_PATH: path.join(process.cwd(), 'chrome-profile'),
     AXIOM_WS_URL: ['wss://cluster9.axiom.trade', 'wss://cluster-global2.axiom.trade'],
     TARGET_URL: 'https://axiom.trade/pulse?chain=sol',

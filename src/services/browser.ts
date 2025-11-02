@@ -1,4 +1,5 @@
-import { chromium, BrowserContext, Page } from 'playwright-extra';
+import { chromium } from 'playwright-extra';
+import type { BrowserContext, Page } from 'playwright';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Server } from 'socket.io';
 import { config } from '../config';
@@ -8,6 +9,11 @@ chromium.use(StealthPlugin());
 
 let browserContext: BrowserContext;
 const priceTrackerPages = new Map<string, { page: Page; subscribers: Set<string> }>();
+let emitCallback: (event: string, data: any) => void;
+
+export function setEmitCallback(callback: (event: string, data: any) => void) {
+    emitCallback = callback;
+}
 
 export async function launchBrowser(io: Server) {
     browserContext = await chromium.launchPersistentContext(config.PROFILE_PATH, {
@@ -36,8 +42,10 @@ export async function launchBrowser(io: Server) {
                             timeStamp: Date.now(),
                             data: parsed?.content || {}
                         };
-                        io.emit('axiom-new-pair', data);
-                        console.log('New pair detected:', data);
+                        if (emitCallback) {
+                            emitCallback('axiom-new-pair', data);
+                        }
+                        // console.log('New pair detected:', data);
                     }
                 } catch (e) {
                     console.error('Parse error:', e);

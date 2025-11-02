@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Axiom Events Test Client</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { margin: 5px; padding: 10px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; max-height: 400px; overflow-y: auto; }
+        input { padding: 8px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Axiom Events Test Client</h1>
+    
+    <div>
+        <h3>New Pair Events</h3>
+        <button onclick="subscribeNewPair()">Subscribe</button>
+        <button onclick="unsubscribeNewPair()">Unsubscribe</button>
+    </div>
+
+    <div>
+        <h3>Price Tracker</h3>
+        <input id="pairAddress" placeholder="Pair Address" value="test123">
+        <input id="chainId" placeholder="Chain ID" value="sol">
+        <button onclick="subscribePriceTracker()">Subscribe</button>
+        <button onclick="unsubscribePriceTracker()">Unsubscribe</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+        const socket = io('http://localhost:5000');
+        
+        socket.on('connect', () => log('Connected: ' + socket.id));
+        socket.on('disconnect', () => log('Disconnected'));
+        socket.on('axiom-new-pair', (data) => log('New Pair: ' + JSON.stringify(data, null, 2)));
+
+        function subscribeNewPair() {
+            socket.emit('axiom-new-pair-subscribe');
+            log('Subscribed to new pairs');
+        }
+
+        function unsubscribeNewPair() {
+            socket.emit('axiom-new-pair-unsubscribe');
+            log('Unsubscribed from new pairs');
+        }
+
+        function subscribePriceTracker() {
+            const pairAddress = document.getElementById('pairAddress').value;
+            const chainId = document.getElementById('chainId').value;
+            socket.emit('axiom-price-tracker', { pairAddress, chainId });
+            log(`Subscribed to price tracker: ${pairAddress} (${chainId})`);
+        }
+
+        function unsubscribePriceTracker() {
+            const pairAddress = document.getElementById('pairAddress').value;
+            const chainId = document.getElementById('chainId').value;
+            socket.emit('axiom-price-tracker-unsubscribe', { pairAddress, chainId });
+            log(`Unsubscribed from price tracker: ${pairAddress} (${chainId})`);
+        }
+
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${msg}</div>` + logDiv.innerHTML;
+        }
+    </script>
+</body>
+</html>
