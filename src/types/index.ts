@@ -14,7 +14,7 @@ export interface NewPairContent {
     token_name: string;
     token_ticker: string;
     token_image: string | null;
-    token_uri: string;
+    token_uri: string | null;
     token_decimals: number;
     pair_sol_account: string;
     pair_token_account: string;

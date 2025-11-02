@@ -8,16 +8,19 @@ chromium.use(StealthPlugin());
 
 export async function launchBrowser(io: Server) {
     const browser = await chromium.launchPersistentContext(config.PROFILE_PATH, {
-        headless: false,
-        args: ['--no-sandbox', '--disable-blink-features=AutomationControlled']
+        headless: !config.VISIBLE_BROWSER,
+        args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'],
+        executablePath: config.CHROMIUM_PATH
     });
+
+    console.log('chromium path', config.CHROMIUM_PATH);
 
     const page = browser.pages()[0] || (await browser.newPage());
 
     page.on('websocket', (ws) => {
-        console.log('WebSocket detected:', ws.url());
-        if (ws.url().startsWith(config.AXIOM_WS_URL)) {
-            console.log('Axiom WebSocket connected');
+        const isAxiomWS = config.AXIOM_WS_URL.some(url => ws.url().startsWith(url));
+        if (isAxiomWS) {
+            console.log('Axiom WebSocket connected:', ws.url());
 
             ws.on('framereceived', (event) => {
                 try {
