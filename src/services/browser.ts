@@ -18,13 +18,26 @@ export function setEmitCallback(callback: (event: string, data: any) => void) {
 
 const pairInfoCache = new Map<string, any>();
 
-async function fetchPairInfo(pairAddress: string, price: number) {
+function fetchPairInfo(pairAddress: string, price: number) {
     const cached = pairInfoCache.get(pairAddress);
-    if (cached) {
-        const data: PriceTrackerContent = { ...cached, price, timeStamp: Date.now(), data: {pairAddress, price, tokenName: cached?.tokenName, tokenTicker: cached?.tokenTicker, tokenImage: cached?.tokenImage, tokenAddress: cached?.tokenAddress, protocol: cached?.protocol, supply: cached?.supply, top10Holders: cached?.top10Holders, lpBurned: cached?.lpBurned, createdAt: cached?.createdAt} };
-        if (emitCallback) {
-            emitCallback('axiom-price-tracker', data);
-        }
+    const data: PriceTrackerContent = { 
+        type: 'priceTracker',
+        timeStamp: Date.now(), 
+        data: {
+            tokenName: cached?.tokenName, 
+            tokenTicker: cached?.tokenTicker, 
+            tokenAddress: cached?.tokenAddress, 
+            pairAddress, 
+            price, 
+            supply: cached?.supply, 
+            top10Holders: cached?.top10Holders, 
+            lpBurned: cached?.lpBurned, 
+            createdAt: cached?.createdAt
+        } 
+    };
+
+    if (emitCallback) {
+        emitCallback('axiom-price-tracker', data);
     }
 }
 
@@ -44,7 +57,7 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
         if (isNewPairWS || isPriceTrackerWS) {
             console.log('Axiom WebSocket connected:', ws.url(), pairAddress ? `[Pair: ${pairAddress}]` : '[New Pairs]');
 
-            ws.on('framereceived', (event) => {
+            ws.on('framereceived', async (event) => {
                 try {
                     const payload = typeof event.payload === 'string' ? event.payload : event.payload.toString();
                     const parsed = JSON.parse(payload);
