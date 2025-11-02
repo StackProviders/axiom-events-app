@@ -35,7 +35,7 @@ function fetchPairInfo(pairAddress: string, price: number) {
             createdAt: cached?.createdAt
         } 
     };
-
+    console.log('Price tracker data:', data);
     if (emitCallback) {
         emitCallback('axiom-price-tracker', data);
     }
@@ -68,6 +68,7 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
                             timeStamp: Date.now(),
                             data: parsed?.content || {}
                         };
+                        console.log('New pair data:', data);
                         if (emitCallback) {
                             emitCallback('axiom-new-pair', data);
                         }
