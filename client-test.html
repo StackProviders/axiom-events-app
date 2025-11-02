@@ -36,7 +36,10 @@
         socket.on('connect', () => log('Connected: ' + socket.id));
         socket.on('disconnect', () => log('Disconnected'));
         socket.on('axiom-new-pair', (data) => log('New Pair: ' + JSON.stringify(data, null, 2)));
-        socket.on('axiom-price-tracker', (data) => log(`Price Update [${data.pairAddress}]: $${data.price}`));
+        socket.on('axiom-price-tracker', (data) => {
+            const msg = `${data.tokenTicker} (${data.tokenName}) - Price: $${data.price} | Supply: ${data.supply.toLocaleString()} | Top10: ${data.top10Holders}% | LP: ${data.lpBurned}%`;
+            log(msg);
+        });
 
         function subscribeNewPair() {
             const chainId = document.getElementById('newPairChainId').value;

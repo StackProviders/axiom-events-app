@@ -65,5 +65,17 @@ export interface NewPairSubscription {
 export interface PriceTrackerContent {
     type: 'priceTracker';
     timeStamp: number;
-    data: {name: string, symbol: string, pairAddress: string, price: number}
+    data: {
+        pairAddress: string, 
+        price: number,
+        tokenName?: string | null,
+        tokenTicker: string | null,
+        tokenImage?: string | null,
+        tokenAddress?: string | null,
+        protocol?: string | null,
+        supply?: number | null,
+        top10Holders?: number | null,
+        lpBurned?: number | null,
+        createdAt?: string | null
+    };
 }

@@ -16,6 +16,18 @@ export function setEmitCallback(callback: (event: string, data: any) => void) {
     emitCallback = callback;
 }
 
+const pairInfoCache = new Map<string, any>();
+
+async function fetchPairInfo(pairAddress: string, price: number) {
+    const cached = pairInfoCache.get(pairAddress);
+    if (cached) {
+        const data: PriceTrackerContent = { ...cached, price, timeStamp: Date.now(), data: {pairAddress, price, tokenName: cached?.tokenName, tokenTicker: cached?.tokenTicker, tokenImage: cached?.tokenImage, tokenAddress: cached?.tokenAddress, protocol: cached?.protocol, supply: cached?.supply, top10Holders: cached?.top10Holders, lpBurned: cached?.lpBurned, createdAt: cached?.createdAt} };
+        if (emitCallback) {
+            emitCallback('axiom-price-tracker', data);
+        }
+    }
+}
+
 export async function launchBrowser(io: Server) {
     browserContext = await chromium.launchPersistentContext(config.PROFILE_PATH, {
         headless: !config.VISIBLE_BROWSER,
@@ -49,16 +61,7 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
                     }
                     if (pairAddress && parsed.room === `f:${pairAddress}`) {
                         const rawData = parsed?.content || [];
-                        const data: PriceTrackerContent = {
-                            type: 'priceTracker',
-                            timeStamp: Date.now(),
-                            data: {pairAddress,
-                                price: rawData[5] || 0,}
-                        };
-                        console.log('Price tracker data:', data);
-                        if (emitCallback) {
-                            emitCallback('axiom-price-tracker', data);
-                        }
+                        fetchPairInfo(pairAddress, rawData[5] || 0);
                     }
                 } catch (e) {
                     console.error('Parse error:', e);
@@ -110,6 +113,31 @@ export async function subscribePriceTracker(socketId: string, pairAddress: strin
     }
 
     const page = await browserContext.newPage();
+    
+    page.on('response', async (response) => {
+        if (response.url().includes('axiom.trade/pair-info?pairAddress=')) {
+            try {
+                const info = await response.json();
+                console.log('Captured API response:', response.url());
+                pairInfoCache.set(pairAddress, {
+                    type: 'priceTracker',
+                    pairAddress,
+                    tokenName: info.tokenName,
+                    tokenTicker: info.tokenTicker,
+                    tokenImage: info.tokenImage,
+                    tokenAddress: info.tokenAddress,
+                    protocol: info.protocol,
+                    supply: info.supply,
+                    top10Holders: info.top10Holders,
+                    lpBurned: info.lpBurned,
+                    createdAt: info.createdAt
+                });
+            } catch (e) {
+                console.error('Failed to parse API response:', e);
+            }
+        }
+    });
+    
     setupWebSocketListener(page, pairAddress);
     const url = `${config.TARGET_PRICE_TRACKER_URL}${pairAddress}?chain=${chainId}`;
     console.log('Opening price tracker URL:', url);
