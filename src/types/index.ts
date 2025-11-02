@@ -61,3 +61,9 @@ export interface PriceTrackerSubscription {
 export interface NewPairSubscription {
     chainId: string;
 }
+
+export interface PriceTrackerContent {
+    type: 'priceTracker';
+    timeStamp: number;
+    data: any;
+}

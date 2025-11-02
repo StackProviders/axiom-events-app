@@ -3,7 +3,7 @@ import type { BrowserContext, Page } from 'playwright';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Server } from 'socket.io';
 import { config } from '../config';
-import { NewPairEvent } from '../types';
+import { NewPairEvent, PriceTrackerContent } from '../types';
 
 chromium.use(StealthPlugin());
 
@@ -24,7 +24,7 @@ export async function launchBrowser(io: Server) {
     });
 }
 
-function setupWebSocketListener(page: Page) {
+function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
     page.on('websocket', (ws) => {
         const isNewPairWS = config.AXIOM_WS_NEW_PAIRS_URL.some((url) => ws.url().startsWith(url));
         const isPriceTrackerWS = config.AXIOM_WS_PRICE_TRACKER_URL.some((url) => ws.url().startsWith(url));
@@ -46,12 +46,13 @@ function setupWebSocketListener(page: Page) {
                             emitCallback('axiom-new-pair', data);
                         }
                     }
-                    if (parsed.room === 'price_tracker') {
+                    if (parsed.room === `f:${pairAddress}`) {
                         const data: PriceTrackerContent = {
                             type: 'priceTracker',
                             timeStamp: Date.now(),
                             data: parsed?.content || {}
                         };
+                        console.log('Price tracker data:', data);
                         if (emitCallback) {
                             emitCallback('axiom-price-tracker', data);
                         }
