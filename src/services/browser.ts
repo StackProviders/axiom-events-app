@@ -37,10 +37,6 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
                     const payload = typeof event.payload === 'string' ? event.payload : event.payload.toString();
                     const parsed = JSON.parse(payload);
                     
-                    if (pairAddress) {
-                        console.log('WS Frame received for pair:', pairAddress, 'Room:', parsed.room);
-                    }
-                    
                     if (parsed.room === 'new_pairs') {
                         const data: NewPairEvent = {
                             type: 'newPair',
@@ -52,12 +48,14 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
                         }
                     }
                     if (pairAddress && parsed.room === `f:${pairAddress}`) {
+                        const rawData = parsed?.content || [];
                         const data: PriceTrackerContent = {
                             type: 'priceTracker',
                             timeStamp: Date.now(),
-                            data: parsed?.content || {}
+                            pairAddress,
+                            price: rawData[5] || 0,
+                            data: rawData
                         };
-                        console.log('Price tracker data:', data);
                         if (emitCallback) {
                             emitCallback('axiom-price-tracker', data);
                         }

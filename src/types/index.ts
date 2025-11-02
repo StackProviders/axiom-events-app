@@ -65,5 +65,7 @@ export interface NewPairSubscription {
 export interface PriceTrackerContent {
     type: 'priceTracker';
     timeStamp: number;
-    data: any;
+    pairAddress: string;
+    price: number;
+    data: any[];
 }

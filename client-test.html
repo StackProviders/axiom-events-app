@@ -36,6 +36,7 @@
         socket.on('connect', () => log('Connected: ' + socket.id));
         socket.on('disconnect', () => log('Disconnected'));
         socket.on('axiom-new-pair', (data) => log('New Pair: ' + JSON.stringify(data, null, 2)));
+        socket.on('axiom-price-tracker', (data) => log(`Price Update [${data.pairAddress}]: $${data.price}`));
 
         function subscribeNewPair() {
             const chainId = document.getElementById('newPairChainId').value;
@@ -65,7 +66,8 @@
 
         function log(msg) {
             const logDiv = document.getElementById('log');
-            logDiv.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${msg}</div>` + logDiv.innerHTML;
+            const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
+            logDiv.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${msgStr}</div>` + logDiv.innerHTML;
         }
     </script>
 </body>
