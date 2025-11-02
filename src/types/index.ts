@@ -52,3 +52,8 @@ export interface NewPairEvent {
     timeStamp: number;
     data:  NewPairContent;
 }
+
+export interface PriceTrackerSubscription {
+    pairAddress: string;
+    chainId: string;
+}
