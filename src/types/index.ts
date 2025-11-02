@@ -7,6 +7,12 @@ export interface ProtocolDetails {
     isOffchain: boolean;
 }
 
+export interface Extra {
+    migratedFrom: string | null;
+    pumpDeployerAddress: string | null;
+    altDeployerAddress: string | null;
+}
+
 export interface NewPairContent {
     pair_address: string;
     signature: string;
@@ -37,7 +43,7 @@ export interface NewPairContent {
     dev_holds_percent: number;
     snipers_hold_percent: number;
     freeze_authority: string | null;
-    extra: any;
+    extra: Extra | null;
     slot: number;
 }
 

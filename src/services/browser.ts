@@ -13,12 +13,10 @@ export async function launchBrowser(io: Server) {
         executablePath: config.CHROMIUM_PATH
     });
 
-    console.log('chromium path', config.CHROMIUM_PATH);
-
     const page = browser.pages()[0] || (await browser.newPage());
 
     page.on('websocket', (ws) => {
-        const isAxiomWS = config.AXIOM_WS_URL.some(url => ws.url().startsWith(url));
+        const isAxiomWS = config.AXIOM_WS_URL.some((url) => ws.url().startsWith(url));
         if (isAxiomWS) {
             console.log('Axiom WebSocket connected:', ws.url());
 
@@ -36,7 +34,7 @@ export async function launchBrowser(io: Server) {
                             data: parsed
                         };
                         io.emit('axiom-event', data);
-                        console.log('New pair detected:', data);
+                        console.log('New pair detected:', parsed);
                     }
                 } catch (e) {
                     console.error('Parse error:', e);
