@@ -30,12 +30,17 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
         const isPriceTrackerWS = config.AXIOM_WS_PRICE_TRACKER_URL.some((url) => ws.url().startsWith(url));
         
         if (isNewPairWS || isPriceTrackerWS) {
-            console.log('Axiom WebSocket connected:', ws.url());
+            console.log('Axiom WebSocket connected:', ws.url(), pairAddress ? `[Pair: ${pairAddress}]` : '[New Pairs]');
 
             ws.on('framereceived', (event) => {
                 try {
                     const payload = typeof event.payload === 'string' ? event.payload : event.payload.toString();
                     const parsed = JSON.parse(payload);
+                    
+                    if (pairAddress) {
+                        console.log('WS Frame received for pair:', pairAddress, 'Room:', parsed.room);
+                    }
+                    
                     if (parsed.room === 'new_pairs') {
                         const data: NewPairEvent = {
                             type: 'newPair',
@@ -46,7 +51,7 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
                             emitCallback('axiom-new-pair', data);
                         }
                     }
-                    if (parsed.room === `f:${pairAddress}`) {
+                    if (pairAddress && parsed.room === `f:${pairAddress}`) {
                         const data: PriceTrackerContent = {
                             type: 'priceTracker',
                             timeStamp: Date.now(),
@@ -107,8 +112,9 @@ export async function subscribePriceTracker(socketId: string, pairAddress: strin
     }
 
     const page = await browserContext.newPage();
-    setupWebSocketListener(page);
+    setupWebSocketListener(page, pairAddress);
     const url = `${config.TARGET_PRICE_TRACKER_URL}${pairAddress}?chain=${chainId}`;
+    console.log('Opening price tracker URL:', url);
     await page.goto(url);
     
     priceTrackerPages.set(key, { page, subscribers: new Set([socketId]) });
