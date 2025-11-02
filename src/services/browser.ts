@@ -12,15 +12,20 @@ export async function launchBrowser(io: Server) {
         args: ['--no-sandbox', '--disable-blink-features=AutomationControlled']
     });
 
-    const page = await browser.newPage();
+    const page = browser.pages()[0] || (await browser.newPage());
 
     page.on('websocket', (ws) => {
+        console.log('WebSocket detected:', ws.url());
         if (ws.url().startsWith(config.AXIOM_WS_URL)) {
             console.log('Axiom WebSocket connected');
 
             ws.on('framereceived', (event) => {
                 try {
-                    const parsed = JSON.parse(event.payload);
+                    const payload =
+                        typeof event.payload === 'string'
+                            ? event.payload
+                            : event.payload.toString();
+                    const parsed = JSON.parse(payload);
                     if (parsed.room === 'new_pairs') {
                         const data: NewPairEvent = {
                             type: 'newPair',
@@ -30,10 +35,14 @@ export async function launchBrowser(io: Server) {
                         io.emit('axiom-event', data);
                         console.log('New pair detected:', data);
                     }
-                } catch {}
+                } catch (e) {
+                    console.error('Parse error:', e);
+                }
             });
         }
     });
 
+    console.log('Navigating to:', config.TARGET_URL);
     await page.goto(config.TARGET_URL);
+    console.log('Page loaded successfully');
 }
