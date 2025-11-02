@@ -15,6 +15,7 @@
     
     <div>
         <h3>New Pair Events</h3>
+        <input id="newPairChainId" placeholder="Chain ID" value="sol">
         <button onclick="subscribeNewPair()">Subscribe</button>
         <button onclick="unsubscribeNewPair()">Unsubscribe</button>
     </div>
@@ -37,13 +38,15 @@
         socket.on('axiom-new-pair', (data) => log('New Pair: ' + JSON.stringify(data, null, 2)));
 
         function subscribeNewPair() {
-            socket.emit('axiom-new-pair-subscribe');
-            log('Subscribed to new pairs');
+            const chainId = document.getElementById('newPairChainId').value;
+            socket.emit('axiom-new-pair-subscribe', { chainId });
+            log(`Subscribed to new pairs: ${chainId}`);
         }
 
         function unsubscribeNewPair() {
-            socket.emit('axiom-new-pair-unsubscribe');
-            log('Unsubscribed from new pairs');
+            const chainId = document.getElementById('newPairChainId').value;
+            socket.emit('axiom-new-pair-unsubscribe', { chainId });
+            log(`Unsubscribed from new pairs: ${chainId}`);
         }
 
         function subscribePriceTracker() {

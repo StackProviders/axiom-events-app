@@ -57,3 +57,7 @@ export interface PriceTrackerSubscription {
     pairAddress: string;
     chainId: string;
 }
+
+export interface NewPairSubscription {
+    chainId: string;
+}

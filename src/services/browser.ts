@@ -9,6 +9,7 @@ chromium.use(StealthPlugin());
 
 let browserContext: BrowserContext;
 const priceTrackerPages = new Map<string, { page: Page; subscribers: Set<string> }>();
+const newPairPages = new Map<string, { page: Page; subscribers: Set<string> }>();
 let emitCallback: (event: string, data: any) => void;
 
 export function setEmitCallback(callback: (event: string, data: any) => void) {
@@ -21,20 +22,19 @@ export async function launchBrowser(io: Server) {
         args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'],
         executablePath: config.CHROMIUM_PATH
     });
+}
 
-    const page = browserContext.pages()[0] || (await browserContext.newPage());
-
+function setupWebSocketListener(page: Page) {
     page.on('websocket', (ws) => {
-        const isAxiomWS = config.AXIOM_WS_URL.some((url) => ws.url().startsWith(url));
-        if (isAxiomWS) {
+        const isNewPairWS = config.AXIOM_WS_NEW_PAIRS_URL.some((url) => ws.url().startsWith(url));
+        const isPriceTrackerWS = config.AXIOM_WS_PRICE_TRACKER_URL.some((url) => ws.url().startsWith(url));
+        
+        if (isNewPairWS || isPriceTrackerWS) {
             console.log('Axiom WebSocket connected:', ws.url());
 
             ws.on('framereceived', (event) => {
                 try {
-                    const payload =
-                        typeof event.payload === 'string'
-                            ? event.payload
-                            : event.payload.toString();
+                    const payload = typeof event.payload === 'string' ? event.payload : event.payload.toString();
                     const parsed = JSON.parse(payload);
                     if (parsed.room === 'new_pairs') {
                         const data: NewPairEvent = {
@@ -45,7 +45,6 @@ export async function launchBrowser(io: Server) {
                         if (emitCallback) {
                             emitCallback('axiom-new-pair', data);
                         }
-                        // console.log('New pair detected:', data);
                     }
                 } catch (e) {
                     console.error('Parse error:', e);
@@ -53,10 +52,36 @@ export async function launchBrowser(io: Server) {
             });
         }
     });
+}
 
-    console.log('Navigating to:', config.TARGET_URL);
-    await page.goto(config.TARGET_URL);
-    console.log('Page loaded successfully');
+export async function subscribeNewPair(socketId: string, chainId: string) {
+    if (newPairPages.has(chainId)) {
+        newPairPages.get(chainId)!.subscribers.add(socketId);
+        console.log(`Client ${socketId} subscribed to existing new pair page: ${chainId}`);
+        return;
+    }
+
+    const page = await browserContext.newPage();
+    setupWebSocketListener(page);
+    const url = `${config.TARGET_NEW_PAIRS_URL}?chain=${chainId}`;
+    await page.goto(url);
+    
+    newPairPages.set(chainId, { page, subscribers: new Set([socketId]) });
+    console.log(`New pair page opened for chain: ${chainId}, subscriber: ${socketId}`);
+}
+
+export async function unsubscribeNewPair(socketId: string, chainId: string) {
+    const tracker = newPairPages.get(chainId);
+    if (!tracker) return;
+    
+    tracker.subscribers.delete(socketId);
+    console.log(`Client ${socketId} unsubscribed from new pairs: ${chainId}`);
+    
+    if (tracker.subscribers.size === 0) {
+        await tracker.page.close();
+        newPairPages.delete(chainId);
+        console.log(`New pair page closed for chain: ${chainId}`);
+    }
 }
 
 export async function subscribePriceTracker(socketId: string, pairAddress: string, chainId: string) {
@@ -64,16 +89,17 @@ export async function subscribePriceTracker(socketId: string, pairAddress: strin
     
     if (priceTrackerPages.has(key)) {
         priceTrackerPages.get(key)!.subscribers.add(socketId);
-        console.log(`Client ${socketId} subscribed to existing page: ${key}`);
+        console.log(`Client ${socketId} subscribed to existing price tracker: ${key}`);
         return;
     }
 
     const page = await browserContext.newPage();
-    const url = `https://axiom.trade/meme/${pairAddress}?chain=${chainId}`;
+    setupWebSocketListener(page);
+    const url = `${config.TARGET_PRICE_TRACKER_URL}${pairAddress}?chain=${chainId}`;
     await page.goto(url);
     
     priceTrackerPages.set(key, { page, subscribers: new Set([socketId]) });
-    console.log(`New page opened for ${key}, subscriber: ${socketId}`);
+    console.log(`Price tracker page opened: ${key}, subscriber: ${socketId}`);
 }
 
 export async function unsubscribePriceTracker(socketId: string, pairAddress: string, chainId: string) {
@@ -99,7 +125,18 @@ export async function cleanupClientSubscriptions(socketId: string) {
             if (tracker.subscribers.size === 0) {
                 await tracker.page.close();
                 priceTrackerPages.delete(key);
-                console.log(`Page closed for ${key} (client disconnected)`);
+                console.log(`Price tracker closed: ${key}`);
+            }
+        }
+    }
+    
+    for (const [chainId, tracker] of newPairPages.entries()) {
+        if (tracker.subscribers.has(socketId)) {
+            tracker.subscribers.delete(socketId);
+            if (tracker.subscribers.size === 0) {
+                await tracker.page.close();
+                newPairPages.delete(chainId);
+                console.log(`New pair page closed: ${chainId}`);
             }
         }
     }

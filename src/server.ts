@@ -2,8 +2,8 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import { config } from './config';
-import { launchBrowser, subscribePriceTracker, unsubscribePriceTracker, cleanupClientSubscriptions, setEmitCallback } from './services/browser';
-import { PriceTrackerSubscription } from './types';
+import { launchBrowser, subscribePriceTracker, unsubscribePriceTracker, subscribeNewPair, unsubscribeNewPair, cleanupClientSubscriptions, setEmitCallback } from './services/browser';
+import { PriceTrackerSubscription, NewPairSubscription } from './types';
 
 const app = express();
 const server = http.createServer(app);
@@ -16,14 +16,14 @@ const newPairSubscribers = new Set<string>();
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
-    socket.on('axiom-new-pair-subscribe', () => {
+    socket.on('axiom-new-pair-subscribe', async (data: NewPairSubscription) => {
         newPairSubscribers.add(socket.id);
-        console.log(`Client ${socket.id} subscribed to new pairs`);
+        await subscribeNewPair(socket.id, data.chainId);
     });
 
-    socket.on('axiom-new-pair-unsubscribe', () => {
+    socket.on('axiom-new-pair-unsubscribe', async (data: NewPairSubscription) => {
         newPairSubscribers.delete(socket.id);
-        console.log(`Client ${socket.id} unsubscribed from new pairs`);
+        await unsubscribeNewPair(socket.id, data.chainId);
     });
 
     socket.on('axiom-price-tracker', async (data: PriceTrackerSubscription) => {
