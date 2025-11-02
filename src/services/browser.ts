@@ -52,10 +52,10 @@ function setupWebSocketListener(page: Page, pairAddress: string | null = null) {
                         const data: PriceTrackerContent = {
                             type: 'priceTracker',
                             timeStamp: Date.now(),
-                            pairAddress,
-                            price: rawData[5] || 0,
-                            data: rawData
+                            data: {pairAddress,
+                                price: rawData[5] || 0,}
                         };
+                        console.log('Price tracker data:', data);
                         if (emitCallback) {
                             emitCallback('axiom-price-tracker', data);
                         }
