@@ -46,6 +46,16 @@ function setupWebSocketListener(page: Page) {
                             emitCallback('axiom-new-pair', data);
                         }
                     }
+                    if (parsed.room === 'price_tracker') {
+                        const data: PriceTrackerContent = {
+                            type: 'priceTracker',
+                            timeStamp: Date.now(),
+                            data: parsed?.content || {}
+                        };
+                        if (emitCallback) {
+                            emitCallback('axiom-price-tracker', data);
+                        }
+                    }
                 } catch (e) {
                     console.error('Parse error:', e);
                 }
@@ -68,6 +78,8 @@ export async function subscribeNewPair(socketId: string, chainId: string) {
     
     newPairPages.set(chainId, { page, subscribers: new Set([socketId]) });
     console.log(`New pair page opened for chain: ${chainId}, subscriber: ${socketId}`);
+
+    
 }
 
 export async function unsubscribeNewPair(socketId: string, chainId: string) {

@@ -17,13 +17,15 @@ io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
     socket.on('axiom-new-pair-subscribe', async (data: NewPairSubscription) => {
+        const chainId = data?.chainId || 'sol';
         newPairSubscribers.add(socket.id);
-        await subscribeNewPair(socket.id, data.chainId);
+        await subscribeNewPair(socket.id, chainId);
     });
 
     socket.on('axiom-new-pair-unsubscribe', async (data: NewPairSubscription) => {
+        const chainId = data?.chainId || 'sol';
         newPairSubscribers.delete(socket.id);
-        await unsubscribeNewPair(socket.id, data.chainId);
+        await unsubscribeNewPair(socket.id, chainId);
     });
 
     socket.on('axiom-price-tracker', async (data: PriceTrackerSubscription) => {
