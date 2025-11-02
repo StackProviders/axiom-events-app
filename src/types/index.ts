@@ -50,8 +50,5 @@ export interface NewPairContent {
 export interface NewPairEvent {
     type: 'newPair';
     timeStamp: number;
-    data: {
-        room: 'new_pairs';
-        content: NewPairContent;
-    };
+    data:  NewPairContent;
 }

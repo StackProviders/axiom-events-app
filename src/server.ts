@@ -6,7 +6,9 @@ import { launchBrowser } from './services/browser';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {
+    cors: { origin: '*', methods: ['GET', 'POST'], credentials: false }
+});
 
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
