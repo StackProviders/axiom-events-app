@@ -33,7 +33,7 @@ export async function launchBrowser(io: Server) {
                             timeStamp: Date.now(),
                             data: parsed?.content || {}
                         };
-                        io.emit('axiom-event', data);
+                        io.emit('axiom-new-pair', data);
                         console.log('New pair detected:', data);
                     }
                 } catch (e) {
