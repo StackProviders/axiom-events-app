@@ -31,10 +31,10 @@ export async function launchBrowser(io: Server) {
                         const data: NewPairEvent = {
                             type: 'newPair',
                             timeStamp: Date.now(),
-                            data: parsed
+                            data: parsed?.content || {}
                         };
                         io.emit('axiom-event', data);
-                        console.log('New pair detected:', parsed);
+                        console.log('New pair detected:', data);
                     }
                 } catch (e) {
                     console.error('Parse error:', e);

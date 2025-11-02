@@ -25,7 +25,7 @@ export interface NewPairContent {
     pair_sol_account: string;
     pair_token_account: string;
     protocol: string;
-    protocol_details: ProtocolDetails;
+    protocol_details: ProtocolDetails | any;
     created_at: string;
     website: string | null;
     twitter: string | null;
