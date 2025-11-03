@@ -31,7 +31,7 @@
     <div class="log" id="log"></div>
 
     <script>
-        const socket = io('http://localhost:5000');
+        const socket = io('https://seema-unengineered-nonforensically.ngrok-free.dev');
         
         socket.on('connect', () => log('Connected: ' + socket.id));
         socket.on('disconnect', () => log('Disconnected'));

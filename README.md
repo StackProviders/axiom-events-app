@@ -8,11 +8,23 @@ Real-time cryptocurrency pair tracking and price monitoring via WebSocket.
 # Install dependencies
 pnpm install
 
-# Start server
+# Development (with auto-reload)
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Start production server
 pnpm start
 ```
 
 Server runs on `http://localhost:5000`
+
+### Commands
+
+- `pnpm dev` - Start development server with auto-reload
+- `pnpm build` - Compile TypeScript to JavaScript
+- `pnpm start` - Run production build from `dist/` folder
 
 ## Client Usage
 
