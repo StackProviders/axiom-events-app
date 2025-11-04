@@ -28,11 +28,7 @@ function fetchPairInfo(pairAddress: string, price: number) {
             tokenTicker: cached?.tokenTicker, 
             tokenAddress: cached?.tokenAddress, 
             pairAddress, 
-            price, 
-            supply: cached?.supply, 
-            top10Holders: cached?.top10Holders, 
-            lpBurned: cached?.lpBurned, 
-            createdAt: cached?.createdAt
+            price
         } 
     };
     if (emitCallback) {
