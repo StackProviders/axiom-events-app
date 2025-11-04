@@ -1,9 +1,9 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
-import { config } from './config';
-import { launchBrowser, subscribePriceTracker, unsubscribePriceTracker, subscribeNewPair, unsubscribeNewPair, cleanupClientSubscriptions, setEmitCallback } from './services/browser';
-import { PriceTrackerSubscription, NewPairSubscription } from './types';
+import { config } from './config/index.js';
+import { launchBrowser, subscribePriceTracker, unsubscribePriceTracker, subscribeNewPair, unsubscribeNewPair, cleanupClientSubscriptions, setEmitCallback } from './services/browser.js';
+import { PriceTrackerSubscription, NewPairSubscription } from './types/index.js';
 
 const app = express();
 const server = http.createServer(app);

@@ -2,8 +2,8 @@ import { chromium } from 'playwright-extra';
 import type { BrowserContext, Page } from 'playwright';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Server } from 'socket.io';
-import { config } from '../config';
-import { NewPairEvent, PriceTrackerContent } from '../types';
+import { config } from '../config/index.js';
+import { NewPairEvent, PriceTrackerContent } from '../types/index.js';
 
 chromium.use(StealthPlugin());
 
