@@ -31,7 +31,9 @@
     <div class="log" id="log"></div>
 
     <script>
-        const socket = io('http://localhost:5000');
+        const socket = io('http://localhost:5000', {
+            transports: ['websocket', 'polling']
+        });
         
         socket.on('connect', () => log('Connected: ' + socket.id));
         socket.on('disconnect', () => log('Disconnected'));
